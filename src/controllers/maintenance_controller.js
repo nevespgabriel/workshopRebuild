@@ -8,8 +8,8 @@ const store = async(req, res) => {
         req.body.services.forEach(service, () => {
             custoTotal += service.price;
         });
-        const veiculo = await Vehicle.findOne({_id: req.body.vehicle});
-        const loja = await Workshop.findOne({_id: req.body.workshop});
+        const veiculo = await Vehicle.findById(req.body.vehicle).exec();
+        const loja = await Workshop.findById(req.body.workshop).exec();
         const novo = await Maintenance.create({
             workshop: req.body.workshop,
             vehicle: req.body.vehicle,
@@ -17,30 +17,31 @@ const store = async(req, res) => {
             date: req.body.date,
             totalCost: custoTotal
         });
-        veiculo.maintenances.push(novo);
-        loja.maintenances.push(novo);
+        veiculo.maintenances.push(novo._id);
+        loja.maintenances.push(novo._id);
         await veiculo.save();
         await loja.save();
+        res.status(200).json(novo);
     } catch(error){
-
+        res.status(500).json(error.message);
     }
 }
 
 const index = async(req, res) => {
     try{
-        const items = await Maintenance.find();
-        res.status(200).json(items);
+        const items = await Maintenance.find().exec();
+        res.json(items);
     } catch(error){
-        res.status(400).json(400);
+        res.status(500).json(error);
     }
 }
 
 const show = async(req, res) => {
     try{
-        const item = await Maintenance.findById(req.params.id).populate("vehicle").populate("workshop");
-        res.status(200).json(item);
+        const item = await Maintenance.findById(req.params.id).populate("[vehicle, workshop]").exec();
+        res.json(item);
     } catch(error){
-        res.status(400).json(error);
+        res.status(500).json(error);
     }   
 }
 
@@ -50,9 +51,9 @@ const update = async(req, res) => {
         req.body.services.forEach(service, () => {
             custoTotal += service.price;
         });
-        const previousMaintenance = await Maintenance.findOne(req.params.id);
-        previousVehicle = await Vehicle.findOne(previousMaintenance.vehicle);
-        previousShop = await Workshop.findOne(previousMaintenance.workshop);
+        const previousMaintenance = await Maintenance.findById(req.params.id).exec();
+        const previousVehicle = await Vehicle.findById(previousMaintenance.vehicle).exec();
+        const previousShop = await Workshop.findById(previousMaintenance.workshop).exec();
         previousVehicle.maintenances = previousVehicle.maintenances.filter(maintenance => maintenance.toString() !== req.params.id);
         previousShop.maintenances = previousShop.maintenances.filter(maintenance => maintenance.toString() !== req.params.id);
         await previousShop.save();
@@ -64,29 +65,31 @@ const update = async(req, res) => {
             date: req.body.date,
             totalCost: custoTotal
         });
-        const veiculo = await Vehicle.findOne({_id: req.body.vehicle});
-        const loja = await Workshop.findOne({_id: req.body.workshop});
-        veiculo.maintenances.push(novo);
-        loja.maintenances.push(novo);
+        const veiculo = await Vehicle.findById(req.body.vehicle).exec();
+        const loja = await Workshop.findById(req.body.workshop).exec();
+        veiculo.maintenances.push(novo._id);
+        loja.maintenances.push(novo._id);
         await veiculo.save();
         await loja.save();
+        res.status(200).json(novo);
     } catch(error){
-        res.status(400).json(error);
+        res.status(500).json(error);
     }
 }
 
 const destroy = async(req, res) => {
     try{
-        const previousMaintenance = await Maintenance.findOne(req.params.id);
-        previousVehicle = await Vehicle.findOne(previousMaintenance.vehicle);
-        previousShop = await Workshop.findOne(previousMaintenance.workshop);
+        const previousMaintenance = await Maintenance.findById(req.params.id).exec();
+        const previousVehicle = await Vehicle.findById(previousMaintenance.vehicle).exec();
+        const previousShop = await Workshop.findById(previousMaintenance.workshop).exec();
         previousVehicle.maintenances = previousVehicle.maintenances.filter(maintenance => maintenance.toString() !== req.params.id);
         previousShop.maintenances = previousShop.maintenances.filter(maintenance => maintenance.toString() !== req.params.id);
         await previousShop.save();
         await previousVehicle.save();
-        await Maintenance.findByIdAndDelete(req.params.id);
+        await Maintenance.findByIdAndDelete(req.params.id).exec();
+        res.status(200)
     } catch(error){
-        res.status(400).json(error);
+        res.status(500).json(error);
     }
 }
 
