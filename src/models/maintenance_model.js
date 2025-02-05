@@ -1,4 +1,4 @@
-import {Schema, model} from "mongoose";
+import { Schema, model } from "mongoose";
 
 const serviceSchema = new Schema({
     name: {
@@ -13,12 +13,12 @@ const serviceSchema = new Schema({
 
 const maintenanceSchema = new Schema({
     workshop:{
-        type: Schema.Types.ObjectId,
+        type: Schema.ObjectId,
         ref: "Workshops",
         required: true
     }, 
     vehicle:{
-        type: Schema.Types.ObjectId,
+        type: Schema.ObjectId,
         ref: "Vehicles",
         required: true
     },
